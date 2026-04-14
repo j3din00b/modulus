@@ -204,6 +204,9 @@ class GeoTransolver(Module):
         Neighbors in radius for the local features. Default is ``[8, 32]``.
     n_hidden_local : int, optional
         Hidden dimension for the local features. Default is 32.
+    attention_type : str, optional
+        attention_type is used to choose the attention type (GALE or GALE_FA). 
+        Default is ``"GALE"``.
 
     Forward
     -------
@@ -315,6 +318,7 @@ class GeoTransolver(Module):
         radii: list[float] | None = None,
         neighbors_in_radius: list[int] | None = None,
         n_hidden_local: int = 32,
+        attention_type: str = "GALE",
         concrete_dropout: bool = False,
     ) -> None:
         super().__init__(meta=GeoTransolverMetaData())
@@ -406,6 +410,7 @@ class GeoTransolver(Module):
                     use_te=use_te,
                     plus=plus,
                     context_dim=context_dim,
+                    attention_type=attention_type,
                     concrete_dropout=concrete_dropout,
                 )
                 for layer_idx in range(n_layers)

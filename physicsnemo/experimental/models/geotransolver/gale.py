@@ -29,18 +29,18 @@ from einops import rearrange
 from jaxtyping import Float
 
 import physicsnemo  # noqa: F401 for docs
-from physicsnemo.core.version_check import check_version_spec
+from physicsnemo.core.version_check import check_version_spec, OptionalImport
 from physicsnemo.nn import Mlp
 from physicsnemo.nn.module.physics_attention import (
     PhysicsAttentionIrregularMesh,
 )
 
+from physicsnemo.experimental.models.geotransolver.gale_fa import GALE_FA
 from physicsnemo.nn import ConcreteDropout
 
 # Check optional dependency availability
 TE_AVAILABLE = check_version_spec("transformer_engine", "0.1.0", hard_fail=False)
-if TE_AVAILABLE:
-    import transformer_engine.pytorch as te
+te = OptionalImport("transformer_engine.pytorch", "0.1.0")
 
 
 class GALE(PhysicsAttentionIrregularMesh):
@@ -327,6 +327,9 @@ class GALE_block(nn.Module):
         Whether to use Transolver++ features. Default is ``False``.
     context_dim : int, optional
         Dimension of the context vector for cross-attention. Default is 0.
+    attention_type : str, optional
+        attention_type is used to choose the attention type (GALE or GALE_FA). 
+        Default is ``"GALE"``.
 
     Forward
     -------
@@ -379,6 +382,7 @@ class GALE_block(nn.Module):
         use_te: bool = True,
         plus: bool = False,
         context_dim: int = 0,
+        attention_type: str = "GALE",
         concrete_dropout: bool = False,
     ) -> None:
         super().__init__()
@@ -397,18 +401,36 @@ class GALE_block(nn.Module):
         else:
             self.ln_1 = nn.LayerNorm(hidden_dim)
 
-        # GALE attention layer
-        self.Attn = GALE(
-            hidden_dim,
-            heads=num_heads,
-            dim_head=hidden_dim // num_heads,
-            dropout=dropout,
-            slice_num=slice_num,
-            use_te=use_te,
-            plus=plus,
-            context_dim=context_dim,
-            concrete_dropout=concrete_dropout,
-        )
+        # Attention layer
+        match attention_type:
+            case 'GALE':
+                self.Attn = GALE(
+                    hidden_dim,
+                    heads=num_heads,
+                    dim_head=hidden_dim // num_heads,
+                    dropout=dropout,
+                    slice_num=slice_num,
+                    use_te=use_te,
+                    plus=plus,
+                    context_dim=context_dim,
+                    concrete_dropout=concrete_dropout,
+                )
+            case 'GALE_FA':
+                self.Attn = GALE_FA(
+                    hidden_dim,
+                    heads=num_heads,
+                    dim_head=hidden_dim // num_heads,
+                    dropout=dropout,
+                    n_global_queries=slice_num,
+                    use_te=use_te,
+                    context_dim=context_dim,
+                    concrete_dropout=concrete_dropout,
+                )
+            case _:
+                raise ValueError(
+                    f"Invalid attention type: {attention_type}. "
+                    f"Expected 'GALE' or 'GALE_FA'."
+                )
 
         # Feed-forward network with layer normalization
         if use_te:

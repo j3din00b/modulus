@@ -58,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added geometry functionals in `physicsnemo.nn.functional` for
   `mesh_poisson_disk_sample`, `mesh_to_voxel_fraction`, and
   `signed_distance_field`.
+- Adds embedded OOD guardrail `OODGuard` at
+  `physicsnemo.experimental.guardrails.embedded`, optionally
+  wired into `GeoTransolver` via a new `guard_config` constructor argument.
+  The guard calibrates per-channel global bounds and a geometry-latent
+  kNN threshold during training, and emits warnings on out-of-distribution
+  inputs at inference.
 - In PhysicsNeMo-Mesh, `physicsnemo.mesh.geometry` now publicly exposes
   `stable_angle_between_vectors` and `compute_triangle_angles` (previously
   only available via the private `physicsnemo.mesh.curvature._utils`).

@@ -220,6 +220,11 @@ class GeoTransolver(Module):
     attention_type : str, optional
         attention_type is used to choose the attention type (GALE or GALE_FA). 
         Default is ``"GALE"``.
+    state_mixing_mode : str, optional
+        How to blend self-attention and cross-attention outputs in GALE layers.
+        ``"weighted"`` uses a learnable sigmoid-gated weighted sum.
+        ``"concat_project"`` concatenates the two along the head dimension and
+        projects back with a linear layer. Default is ``"weighted"``.
 
     Forward
     -------
@@ -351,6 +356,7 @@ class GeoTransolver(Module):
         guard_config: dict | None = None,
         attention_type: str = "GALE",
         concrete_dropout: bool = False,
+        state_mixing_mode: str = "weighted",
     ) -> None:
         super().__init__(meta=GeoTransolverMetaData())
         self.__name__ = "GeoTransolver"
@@ -443,6 +449,7 @@ class GeoTransolver(Module):
                     context_dim=context_dim,
                     attention_type=attention_type,
                     concrete_dropout=concrete_dropout,
+                    state_mixing_mode=state_mixing_mode,
                 )
                 for layer_idx in range(n_layers)
             ]

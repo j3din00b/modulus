@@ -155,6 +155,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `ShardTensor.redistribute` now computes receive shapes analytically when
+  sharding shapes are known, skipping the shape-negotiation `all_to_all`
+  collective (falls back to the collective only when shapes are unavailable).
 - PhysicsNeMo-Mesh tensor-valued gradients now consistently use the documented
   derivative-first layout `(entity, spatial_dimension, *value_shape)` across
   LSQ, intrinsic LSQ, and DEC. Earlier LSQ releases returned

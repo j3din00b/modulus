@@ -14,21 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Make the Stanford bunny mesh for the tutorials."""
+"""Warp kernel for projecting centroids onto a triangle surface."""
 
-from pathlib import Path
+import warp as wp
 
-import pyvista as pv
-import torch
 
-from physicsnemo.mesh.io.io_pyvista import from_pyvista
-from physicsnemo.mesh.remeshing import remesh
-
-mesh = from_pyvista(pv.examples.download_bunny_coarse())
-mesh = remesh(
-    mesh.clean().subdivide(levels=3, filter="linear"),
-    400,
-)
-mesh = mesh.rotate(axis="x", angle=torch.pi / 2).rotate(axis="z", angle=torch.pi / 2)
-
-torch.save(mesh, Path(__file__).parent / "bunny.pt")
+@wp.kernel
+def project_centroids_to_surface(
+    mesh_id: wp.uint64,
+    centroids: wp.array(dtype=wp.vec3f),
+    max_distance: wp.float32,
+):
+    """Project centroids to their closest points on the source surface."""
+    centroid_index = wp.tid()
+    query = wp.mesh_query_point_no_sign(
+        mesh_id, centroids[centroid_index], max_distance
+    )
+    if query.result:
+        centroids[centroid_index] = wp.mesh_eval_position(
+            mesh_id,
+            query.face,
+            query.u,
+            query.v,
+        )

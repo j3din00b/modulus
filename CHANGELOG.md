@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Adds `zenith_azimuth_angles` and `zenith_azimuth_angles_from_timestamp` to
+  `physicsnemo.utils.zenith_angle`, returning
+  `(sin_zenith, cos_zenith, sin_azimuth, cos_azimuth)` alongside the existing
+  `cos_zenith_angle` / `cos_zenith_angle_from_timestamp` helpers. The azimuth
+  follows the north-clockwise convention.
 - Adds `physicsnemo.nn.shrink_and_perturb_`, an in-place shrink-and-perturb
   weight re-initialization for warm-starting from pretrained weights.
 - Adds dimension-generic volume mesh generation for implicit domains to
